@@ -1,46 +1,25 @@
 const express = require('express')
 const exphbs = require('express-handlebars')
 const methodOverride = require('method-override')
-const bcrypt = require('bcryptjs')
+const session = require('express-session')
+const usePassport = require('./config/passport')
+const routes = require('./routes')
 const app = express()
 const PORT = 3000
-
-const db = require('./models')
-const Todo = db.Todo
-const User = db.User
 
 app.engine('hbs', exphbs({defaultLayout: 'main', extname:'.hbs'}))
 app.set('view engine', 'hbs')
 app.use(methodOverride('_method'))
 app.use(express.urlencoded({extended: true}))
 
-// Authenticate Routes
-app.get('/', (req, res) => {
-  res.send('hello world')
-})
+app.use(session({
+  secret: 'ThisIsMySecret',
+  resave: false,
+  saveUninitialized: true
+}))
+usePassport(app)
 
-app.get('/users/login', (req, res) => {
-  res.render('login')
-})
-
-app.post('/users/login', (req, res) => {
-  res.send('login')
-})
-
-app.get('/users/register', (req, res) => {
-  res.render('register')
-})
-
-app.post('/users/register', (req, res) => {
-  const { name, email, password, confirmPassword } = req.body
-  User.create({ name, email, password })
-    .then(user => res.redirect('/'))
-})
-
-app.get('/users/logout', (req, res) => {
-  res.send('logout')
-})
-
+app.use(routes)
 app.listen(PORT, () => {
   console.log(`This app is running on localhost:${PORT}`)
 })
